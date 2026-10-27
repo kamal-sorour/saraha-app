@@ -4,7 +4,7 @@ import { rm } from "node:fs/promises";
 export const globalErrorHandling = (error, req, res, next) => {
   if (res.headersSent) return next(error);
   for (const file of [...(req.files ?? []), ...(req.file ? [req.file] : [])]) {
-    if (file.path) rm(file.path, { force: true }).catch(() => {});
+    if (file.path) rm(file.path, { force: true }).catch(() => { });
   }
 
   const mapped = error.cause?.status
@@ -52,6 +52,7 @@ export const notFoundException = (value) => ErrorResponse({ ...options(value, "N
 export const unauthorizedException = (value) => ErrorResponse({ ...options(value, "Unauthorized"), status: 401 });
 export const conflictException = (value) => ErrorResponse({ ...options(value, "Conflict"), status: 409 });
 export const forbiddenException = (value) => ErrorResponse({ ...options(value, "Forbidden"), status: 403 });
+export const serviceUnavailableException = (value) => ErrorResponse({ ...options(value, "Service unavailable"), status: 503 });
 
 // Temporary compatibility aliases; migrate callers to the correctly spelled names.
 export const badRequestExpeption = badRequestException;

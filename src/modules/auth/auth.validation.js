@@ -18,6 +18,12 @@ export const login = {
   }).required()
 };
 
+export const googleLogin = {
+  body: joi.object({
+    credential: joi.string().trim().min(100).max(8192).required(),
+  }).required(),
+};
+
 export const verifyEmail = {
   body: joi.object().keys({
     email: generalValidationFields.email.trim().lowercase().required(),

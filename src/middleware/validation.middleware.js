@@ -5,8 +5,8 @@ export const validation = (schema) => {
     const validationErrors = [];
 
     for (const key of Object.keys(schema)) {
-      const dataToValidate = req[key]; 
-      
+      const dataToValidate = req[key];
+
       if (schema[key]) {
         const validationResult = schema[key].validate(dataToValidate, { abortEarly: false, allowUnknown: false });
 
@@ -20,9 +20,9 @@ export const validation = (schema) => {
     }
 
     if (validationErrors.length > 0) {
-return next(badRequestException({ message: validationErrors.join(", ") }));
+      return next(badRequestException({ message: validationErrors.join(", ") }));
     }
-    
+
     return next();
   };
 };

@@ -4,15 +4,16 @@ import { RedisStore } from "rate-limit-redis";
 import { redisClient } from "../DB/redis.connection.db.js";
 
 const redisStore = (prefix) => {
-  const store = new RedisStore({
-    prefix,
-    sendCommand: (...args) => redisClient.sendCommand(args),
-  });
+  let store;
   let options;
   let initialization;
   const initialize = async () => {
     if (!redisClient.isReady) throw new Error("Redis is not ready for rate limiting");
-    initialization ??= store.init(options);
+    store ??= new RedisStore({
+      prefix,
+      sendCommand: (...args) => redisClient.sendCommand(args),
+    });
+    initialization ??= Promise.resolve(store.init(options));
     await initialization;
   };
 
@@ -50,4 +51,14 @@ export const limiterLogin = rateLimit({
   keyGenerator: loginKey,
   store: redisStore("login:"),
   handler: (req, res) => res.status(429).json({ message: "Too many login attempts", requestId: req.id }),
+});
+
+export const limiterGoogle = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  keyGenerator: (req) => ipKeyGenerator(req.ip ?? "0.0.0.0", 56),
+  store: redisStore("google-login:"),
+  handler: (req, res) => res.status(429).json({ message: "Too many Google sign-in attempts", requestId: req.id }),
 });

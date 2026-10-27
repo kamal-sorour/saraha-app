@@ -20,20 +20,21 @@
   "dependencies": {
     "argon2": "^0.44.0",
     "bcrypt": "^6.0.0",
+    "bullmq": "^5.72.0",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.2",
+    "file-type": "^21.3.0",
+    "google-auth-library": "^10.9.1",
     "helmet": "^8.1.0",
     "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.5",
     "multer": "^2.1.1",
     "nodemailer": "^8.0.4",
-    "redis": "^5.11.0",
     "rate-limit-redis": "^4.3.1",
-    "bullmq": "^5.72.0",
-    "file-type": "^21.3.0",
+    "redis": "^5.11.0",
     "swagger-ui-express": "^5.0.1"
   }
 }

@@ -60,51 +60,53 @@ export const createMessageListService = ({ model = MessageModel, decodeCursor = 
 });
 
 export const getAllMessages = createMessageListService().getAllMessages;
-export const sendMessage = async (receiverId, files=[], {content }, user)=>{
+export const sendMessage = async (receiverId, files = [], { content }, user) => {
   const receiver = await findOne({
-    model:UserModel,
-    filter:{
-      _id:receiverId,
-      confirmEmail:{$exists:true}
+    model: UserModel,
+    filter: {
+      _id: receiverId,
+      confirmEmail: { $exists: true }
     }
   })
   if (!receiver) {
-    throw notFoundException({message:"No matching account"})
+    throw notFoundException({ message: "No matching account" })
   }
   const message = await createOne({
-    model:MessageModel,
-    data:{
+    model: MessageModel,
+    data: {
       content,
-      attachments:files.map(file=>file.finalPath)||[],
+      attachments: files.map(file => file.finalPath) || [],
       receiverId,
-      senderId:user?user._id:undefined
+      senderId: user ? user._id : undefined
     }
   })
-return toPublicMessage(message)
+  return toPublicMessage(message)
 }
-export const getMessageById = async (messageId, user)=>{
-  const message = await findOne({model:MessageModel, filter:{
-    _id:messageId,
-    $or:[
-      {senderId:user._id},
-      {receiverId:user._id},
+export const getMessageById = async (messageId, user) => {
+  const message = await findOne({
+    model: MessageModel, filter: {
+      _id: messageId,
+      $or: [
+        { senderId: user._id },
+        { receiverId: user._id },
 
-    ],
-  },
-})
+      ],
+    },
+  })
   if (!message) {
-    throw notFoundException({message:"invalid messageId or not autherized action"})
+    throw notFoundException({ message: "invalid messageId or not autherized action" })
   }
-return toPublicMessage(message)
+  return toPublicMessage(message)
 }
-export const deleteMessageById = async (messageId, user)=>{
-  const message = await deleteOne({model:MessageModel, filter:{
-    _id:messageId,
- receiverId:user._id,
-}
-})
+export const deleteMessageById = async (messageId, user) => {
+  const message = await deleteOne({
+    model: MessageModel, filter: {
+      _id: messageId,
+      receiverId: user._id,
+    }
+  })
   if (!message.deletedCount) {
-    throw notFoundException({message:"invalid messageId or not autherized action"})
+    throw notFoundException({ message: "invalid messageId or not autherized action" })
   }
-return message
+  return message
 }

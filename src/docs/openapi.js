@@ -50,6 +50,13 @@ export const openApiDocument = {
         responses: { "200": { description: "Access and refresh tokens" }, "401": { description: "Invalid credentials" }, "429": { description: "Rate limited" } },
       },
     },
+    "/auth/google": {
+      post: {
+        summary: "Sign in or sign up with a verified Google ID token",
+        requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["credential"], properties: { credential: { type: "string", description: "Google Identity Services ID token" } } } } } },
+        responses: { "200": { description: "Public account plus application access and refresh tokens" }, "400": { description: "Invalid request" }, "401": { description: "Invalid Google credential" }, "409": { description: "A different account provider already uses this email" }, "429": { description: "Rate limited" }, "503": { description: "Google sign-in is not configured" } },
+      },
+    },
     "/user/{userId}": {
       get: {
         summary: "Read public user profile",

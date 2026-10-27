@@ -31,9 +31,11 @@ router.post(
   validation(validators.sendMessage),
   async (req, res, next) => {
     if (!req.body?.content && !req.files) {
-      throw badRequestException({message:"validation error", extra:{
-        message: "at least one key is required from [content , attachment]",
-      }});
+      throw badRequestException({
+        message: "validation error", extra: {
+          message: "at least one key is required from [content , attachment]",
+        }
+      });
     }
     const message = await sendMessage(
       req.params.receiverId,
@@ -49,7 +51,7 @@ router.get(
   authentication(),
   validation(validators.getMessage),
   async (req, res, next) => {
-    const message = await getMessageById(req.params.messageId,req.user);
+    const message = await getMessageById(req.params.messageId, req.user);
     return successResponse({ res, status: 200, data: { message } });
   },
 );
@@ -60,7 +62,7 @@ router.delete(
   authentication(),
   validation(validators.getMessage),
   async (req, res, next) => {
-    const message = await deleteMessageById(req.params.messageId,req.user);
+    const message = await deleteMessageById(req.params.messageId, req.user);
     return successResponse({ res, status: 200, data: { message } });
   },
 );

@@ -2,16 +2,14 @@ import { Router } from "express";
 import { successResponse } from "../../common/utils/index.js";
 import * as validators from "./auth.validation.js";
 import { validation } from "./../../middleware/index.js";
-import * as defaultAuthService from "./auth.service.js";
-import { limiterLogin as defaultLimiterLogin } from "../../middleware/limiter.js";
-import { deleteKey as defaultDeleteKey } from "../../common/services/redis.service.js";
 import { toPublicUser } from "../user/user.dto.js";
 
 export const createAuthRouter = ({
-  authService = defaultAuthService,
-  limiterLogin = defaultLimiterLogin,
-  deleteLoginKey = defaultDeleteKey,
-} = {}) => {
+  authService,
+  limiterLogin,
+  limiterGoogle = (_req, _res, next) => next(),
+  deleteLoginKey,
+}) => {
   const router = Router();
 
   router.patch("/confirm-email", validation(validators.confirmEmail), async (req, res) => {
@@ -50,7 +48,10 @@ export const createAuthRouter = ({
     return successResponse({ res, status: 200, data: account });
   });
 
+  router.post("/google", limiterGoogle, validation(validators.googleLogin), async (req, res) => {
+    const { account, credentials } = await authService.googleLogin(req.body);
+    return successResponse({ res, status: 200, data: { account: toPublicUser(account), ...credentials } });
+  });
+
   return router;
 };
-
-export default createAuthRouter();

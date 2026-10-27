@@ -47,7 +47,7 @@ export const getTokenSignature = async (role) => {
 export const createLoginCredentiels = async (userInfo) => {
   const { accessSignature, refreshSignature, audience } = await getTokenSignature(userInfo.role);
   const jwtid = randomUUID();
-  
+
   const access_token = await generateToken({
     payload: { sub: userInfo._id, sv: userInfo.sessionVersion ?? 0 },
     secret: accessSignature,

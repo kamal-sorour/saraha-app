@@ -25,6 +25,7 @@ export const EMAIL_APP_PASSWORD = process.env.EMAIL_APP_PASSWORD
 export const EMAIL_APP = process.env.EMAIL_APP
 export const APPLICATION_NAME = process.env.APPLICATION_NAME
 export const ORIGINS = (process.env.ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
+export const GOOGLE_CLIENT_IDS = (process.env.GOOGLE_CLIENT_IDS ?? "").split(",").map((clientId) => clientId.trim()).filter(Boolean);
 
 export const assertConfig = () => {
 	const required = [

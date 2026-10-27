@@ -1,15 +1,11 @@
-
-export const createOne = async({
+export const createOne = async ({
   model,
-  data={},
-  options={validateBeforeSave:true}
-}={})=>{
-const [doc] = await create({model, data:[data], options})
-return doc
+  data = {},
+  options = { validateBeforeSave: true }
+} = {}) => {
+  const [doc] = await create({ model, data: [data], options })
+  return doc
 }
-
-
-
 
 export const findById = async ({
   id,
@@ -66,6 +62,7 @@ export const find = async ({
   }
   return await doc.exec();
 }
+
 export const paginate = async ({
   filter = {},
   options = {},
@@ -208,6 +205,3 @@ export const findOneAndDelete = async ({
     filter || {},
   );
 }
-
-
-

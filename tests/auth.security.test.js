@@ -5,6 +5,8 @@ import { login as loginSchema, signup as signupSchema } from "../src/modules/aut
 import { hasExpectedAudience, isSessionCurrent } from "../src/common/utils/security/token.security.js";
 import { UserModel } from "../src/DB/models/user.model.js";
 import { RoleEnum } from "../src/common/enums/user.enum.js";
+import { ProviderEnum } from "../src/common/enums/user.enum.js";
+import { createGoogleIdentityVerifier } from "../src/modules/auth/google.service.js";
 
 const notFoundException = ({ message }) => new Error(message);
 
@@ -80,4 +82,48 @@ test("new users receive the least-privileged role by default", () => {
     firstName: "Test", lastName: "User", email: "test@example.com", password: "hash",
   });
   assert.equal(user.role, RoleEnum.User);
+});
+
+test("Google users do not require a local password", () => {
+  const user = new UserModel({
+    firstName: "Google", lastName: "User", email: "google@example.com", googleId: "google-sub", provider: ProviderEnum.Google,
+  });
+  assert.equal(user.validateSync(), undefined);
+});
+
+test("Google ID tokens are verified and normalized before account lookup", async () => {
+  const verify = createGoogleIdentityVerifier({
+    clientIds: ["client-id"],
+    client: {
+      async verifyIdToken({ idToken, audience }) {
+        assert.equal(idToken, "google-id-token");
+        assert.deepEqual(audience, ["client-id"]);
+        return { getPayload: () => ({ sub: "google-sub", email: " Person@Example.com ", email_verified: true, given_name: "Person", family_name: "Example" }) };
+      },
+    },
+  });
+  const identity = await verify("google-id-token");
+  assert.deepEqual(identity, { googleId: "google-sub", email: "person@example.com", firstName: "Person", lastName: "Example", picture: undefined });
+});
+
+test("Google login creates a confirmed federated account and never auto-links a password account", async () => {
+  const calls = [];
+  const service = createAuthService({
+    verifyGoogleIdToken: async () => ({ googleId: "google-sub", email: "person@example.com", firstName: "Person", lastName: "Example", picture: undefined }),
+    findOne: async (input) => { calls.push(input); return null; },
+    createOne: async ({ data }) => ({ _id: "account-id", role: RoleEnum.User, ...data }),
+    createLoginCredentiels: async () => ({ access_token: "access", refresh_token: "refresh" }),
+  });
+  const result = await service.googleLogin({ credential: "google-id-token" });
+  assert.equal(result.account.provider, ProviderEnum.Google);
+  assert.equal(result.account.googleId, "google-sub");
+  assert.ok(result.account.confirmEmail instanceof Date);
+  assert.deepEqual(calls.map(({ filter }) => filter), [{ googleId: "google-sub" }, { email: "person@example.com" }]);
+
+  const noAutoLink = createAuthService({
+    verifyGoogleIdToken: async () => ({ googleId: "new-google-sub", email: "person@example.com", firstName: "Person", lastName: "Example" }),
+    findOne: async ({ filter }) => filter.email ? { provider: ProviderEnum.System } : null,
+    conflictException: ({ message }) => new Error(message),
+  });
+  await assert.rejects(noAutoLink.googleLogin({ credential: "google-id-token" }), /already exists/);
 });

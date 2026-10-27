@@ -25,14 +25,14 @@ export const generateHash = async ({
 
 export const compareHash = async ({
   plainText,
-cipherText,
+  cipherText,
   minor = "b",
   approch = HashApproachEnum.bcrypt,
 } = {}) => {
-  let match=false;
+  let match = false;
   switch (approch) {
     case HashApproachEnum.argon2:
-      match = await argon2.verify(cipherText,plainText);
+      match = await argon2.verify(cipherText, plainText);
       break;
 
     default:

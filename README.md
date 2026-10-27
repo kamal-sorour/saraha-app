@@ -377,6 +377,14 @@ The API listens on **`http://localhost:3000`** by default.
 | `EMAIL_APP` | Sender Gmail address |
 | `EMAIL_APP_PASSWORD` | Gmail app password |
 
+### Google Sign-In
+
+| Variable | Description |
+|---|---|
+| `GOOGLE_CLIENT_IDS` | Comma-separated OAuth 2.0 client IDs permitted to issue ID tokens for this API |
+
+Create a Web OAuth client in Google Cloud, add the frontend's authorized JavaScript origins, then set its client ID in `GOOGLE_CLIENT_IDS`. The frontend must send the Google Identity Services ID token to `POST /auth/google` as `{ "credential": "<id-token>" }` over HTTPS. The API verifies the token server-side and stores Google `sub` as the federated identity; never send a Google user ID or email as proof of identity.
+
 ---
 
 ## 📡 API Reference
@@ -389,6 +397,7 @@ Interactive documentation is available at **`/docs`**. Summary below.
 |---|---|---|
 | `POST` | `/auth/signup` | Register a new user |
 | `POST` | `/auth/login` | Login and receive access + refresh tokens *(rate-limited)* |
+| `POST` | `/auth/google` | Sign in or register with a verified Google ID token *(rate-limited)* |
 | `PATCH` | `/auth/confirm-email` | Confirm email with the verification code |
 | `PATCH` | `/auth/resend-confirm-email` | Resend the confirmation email |
 | `POST` | `/auth/request-forgot-password-code` | Request a password reset code |

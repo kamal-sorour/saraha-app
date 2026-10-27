@@ -22,7 +22,7 @@ test("login route rejects a missing password before reaching the service", async
   const router = createAuthRouter({
     authService: { login: async () => { called = true; } },
     limiterLogin: (_req, _res, next) => next(),
-    deleteLoginKey: async () => {},
+    deleteLoginKey: async () => { },
   });
 
   const response = await post(router, "/login", { email: "person@example.com" });
@@ -40,11 +40,35 @@ test("login route returns tokens only after the confirmed-account service flow s
       },
     },
     limiterLogin: (_req, _res, next) => next(),
-    deleteLoginKey: async () => {},
+    deleteLoginKey: async () => { },
   });
 
   const response = await post(router, "/login", { email: "person@example.com", password: "StrongPass1!" });
   assert.equal(response.status, 200);
   assert.deepEqual(input, { email: "person@example.com", password: "StrongPass1!" });
   assert.deepEqual(response.payload.data, { access_token: "access", refresh_token: "refresh" });
+});
+
+test("Google route accepts only a credential and returns app credentials", async () => {
+  let input;
+  const router = createAuthRouter({
+    authService: {
+      googleLogin: async (body) => {
+        input = body;
+        return {
+          account: { _id: "account-id", firstName: "Google", lastName: "User", role: 1 },
+          credentials: { access_token: "access", refresh_token: "refresh" },
+        };
+      },
+    },
+    limiterLogin: (_req, _res, next) => next(),
+    deleteLoginKey: async () => {},
+  });
+
+  const credential = "x".repeat(100);
+  const response = await post(router, "/google", { credential });
+  assert.equal(response.status, 200);
+  assert.deepEqual(input, { credential });
+  assert.equal(response.payload.data.access_token, "access");
+  assert.equal(response.payload.data.account.username, "Google User");
 });

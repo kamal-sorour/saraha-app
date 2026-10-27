@@ -16,15 +16,15 @@ export const sendEmail = async ({
   subject,
   html,
   text,
-  attachments=[]
-}={})=>{
+  attachments = []
+} = {}) => {
   return transporter.sendMail({
     to,
     cc,
     bcc,
     subject,
     attachments,
-    from:`"${APPLICATION_NAME} "<${EMAIL_APP}>`,
+    from: `"${APPLICATION_NAME} "<${EMAIL_APP}>`,
     html,
     text,
   })

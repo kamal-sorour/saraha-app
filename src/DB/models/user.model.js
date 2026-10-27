@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function () { return this.provider === ProviderEnum.System; },
       select: false,
     },
     phone: { type: String, select: false },
@@ -49,6 +49,8 @@ const userSchema = new mongoose.Schema(
       enum: Object.values(ProviderEnum),
       default: ProviderEnum.System,
     },
+    // Google `sub` is the stable federated identity; email is not used as its identifier.
+    googleId: { type: String, unique: true, sparse: true },
     role: {
       type: Number,
       enum: Object.values(RoleEnum),
@@ -94,6 +96,6 @@ userSchema
     return this.firstName + " " + this.lastName;
   });
 
-  
+
 export const UserModel =
   mongoose.models.Users || mongoose.model("User", userSchema);

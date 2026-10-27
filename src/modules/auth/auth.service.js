@@ -11,10 +11,11 @@ import { createLoginCredentiels } from "../../common/utils/security/token.securi
 import { ProviderEnum } from "../../common/enums/user.enum.js";
 import { EmailEnum } from "../../common/enums/index.js";
 import { issueOtp, verifyOtp } from "./otp.service.js";
+import { verifyGoogleIdToken } from "./google.service.js";
 
 const defaultDependencies = {
   compareHash, conflictException, createLoginCredentiels, createOne, encrypt,
-  findOne, generateHash, issueOtp, notFoundException, UserModel, verifyOtp,
+  findOne, generateHash, issueOtp, notFoundException, UserModel, verifyOtp, verifyGoogleIdToken,
 };
 
 // Injectable dependencies keep account-security flows deterministic in tests.
@@ -70,6 +71,33 @@ export const createAuthService = (overrides = {}) => {
     return deps.createLoginCredentiels(user, "Saraha_App");
   };
 
+  const googleLogin = async ({ credential }) => {
+    const identity = await deps.verifyGoogleIdToken(credential);
+    const linkedAccount = await deps.findOne({ model: deps.UserModel, filter: { googleId: identity.googleId } });
+    if (linkedAccount) {
+      return { account: linkedAccount, credentials: await deps.createLoginCredentiels(linkedAccount) };
+    }
+
+    // Never link a password account merely because Google reports the same email.
+    const accountWithEmail = await deps.findOne({ model: deps.UserModel, filter: { email: identity.email } });
+    if (accountWithEmail) {
+      throw deps.conflictException({ message: "An account with this email already exists. Sign in with its original method." });
+    }
+
+    const account = await deps.createOne({
+      model: deps.UserModel,
+      data: {
+        username: `${identity.firstName} ${identity.lastName}`,
+        email: identity.email,
+        googleId: identity.googleId,
+        provider: ProviderEnum.Google,
+        confirmEmail: new Date(),
+        ...(identity.picture ? { profilePicture: identity.picture } : {}),
+      },
+    });
+    return { account, credentials: await deps.createLoginCredentiels(account) };
+  };
+
   const requestForgotPasswordCode = async ({ email }) => {
     const account = await deps.findOne({
       model: deps.UserModel,
@@ -97,12 +125,12 @@ export const createAuthService = (overrides = {}) => {
     await account.save();
   };
 
-  return { Signup, confirmEmail, resendConfirmEmail, login, requestForgotPasswordCode, verifyForgotPasswordCode, resetForgotPasswordCode };
+  return { Signup, confirmEmail, resendConfirmEmail, login, googleLogin, requestForgotPasswordCode, verifyForgotPasswordCode, resetForgotPasswordCode };
 };
 
 const authService = createAuthService();
 
 export const {
-  Signup, confirmEmail, resendConfirmEmail, login, requestForgotPasswordCode,
+  Signup, confirmEmail, resendConfirmEmail, login, googleLogin, requestForgotPasswordCode,
   verifyForgotPasswordCode, resetForgotPasswordCode,
 } = authService;
